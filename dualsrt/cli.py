@@ -22,7 +22,7 @@ def produce_dual_subtitles(video: Path, primary_lang: str, secondary_lang: str):
 
 
 def main():
-    video = Path(sys.argv[0])
+    video = Path(sys.argv[1])
     produce_dual_subtitles(video, "eng", "rus")
     return 0
 
