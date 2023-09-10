@@ -1,6 +1,6 @@
 [project]
 authors = [{ name = "Igor Kozyrenko", email = "igor@ikseek.com" }]
-dependencies = ["srt"]
+dependencies = ["ffmpeg-python","srt"]
 description = "Dual language subtitle generation tool"
 license = {file = "LICENSE"}
 name = "dualsrt"
