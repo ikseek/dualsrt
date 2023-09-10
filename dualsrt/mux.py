@@ -2,7 +2,11 @@ from typing import Iterable, Optional
 
 from srt import Subtitle
 from heapq import merge
-from itertools import pairwise
+
+
+def pairwise(iter):
+    cached = list(iter)
+    return zip(cached, cached[1:])
 
 
 def patched_eq(self, other):
@@ -152,7 +156,6 @@ def test_combine_subtitles_not_intersect():
         [Subtitle(None, 1, 2, "a"), None],
         [None, Subtitle(None, 3, 4, "b")],
     ]
-
 
 
 def test_combine_subtitles_chain():
