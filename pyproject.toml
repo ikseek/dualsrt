@@ -4,7 +4,7 @@ dependencies = ["srt"]
 description = "Dual language subtitle generation tool"
 license = {file = "LICENSE"}
 name = "dualsrt"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 version = "0.1"
 
 [project.optional-dependencies]

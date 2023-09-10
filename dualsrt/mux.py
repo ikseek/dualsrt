@@ -42,7 +42,7 @@ def dual_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -
     return combined
 
 
-def combine_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -> Iterable[[Subtitle, Subtitle]]:
+def combine_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -> Iterable[tuple[Subtitle, Subtitle]]:
     current = [None, None]
     combined = []
     for sub, position in merge(((p, 0) for p in primary), ((s, 1) for s in secondary)):
