@@ -19,16 +19,16 @@ def find_subtitles(file: Path, languages, skip_forced=True, skip_commentary=True
     return subtitles
 
 
-def extract_subtitle_tracks(file: Path, *tracks: int) -> tuple[str]:
+def extract_subtitle_tracks(file: Path, *tracks: int) -> dict[int, str]:
     with TemporaryDirectory() as tmp_dir:
         tmp_dir = Path(tmp_dir)
-        subs = [(tmp_dir / f"{track}.srt", track) for track in tracks]
+        subs = [(track, tmp_dir / f"{track}.srt") for track in tracks]
 
         stream = ffmpeg.input(file)
-        outputs = [stream.output(str(sub), map=f"0:{track}") for sub, track in subs]
+        outputs = [stream.output(str(sub), map=f"0:{track}") for track, sub in subs]
         ffmpeg.merge_outputs(*outputs).run()
 
-        return tuple(sub.read_text() for sub, _ in subs)
+        return {track: sub.read_text() for track, sub in subs}
 
 
 TEST_DATA = Path(__file__).parent.parent / "testdata"
@@ -63,7 +63,6 @@ def test_find_subtitles_f3():
 
 def test_extract_english_track_f1():
     input_file = TEST_DATA / "f1.mkv"
-    eng, rus = extract_subtitle_tracks(input_file, 15, 13)
+    subs = extract_subtitle_tracks(input_file, 15, 13)
 
-    assert eng
-    assert rus
+    assert subs
