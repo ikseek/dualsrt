@@ -25,14 +25,14 @@ def dual_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -
         if prim:
             prim_content = prim.content.strip()
             if not "\n" in prim_content:
-                prim_content += "\n."
+                prim_content = ".\n" + prim_content
             proprietary = prim.proprietary
             start = prim.start
             end = prim.end
         if sec:
             sec_content = sec.content.strip()
             if not "\n" in sec_content:
-                sec_content += "\n."
+                sec_content = ".\n" + sec_content
             start = sec.start
             end = sec.end
         content = f'<font color="#ffffff">{prim_content}</font>\n<font color="#888888">{sec_content}</font>'
@@ -42,7 +42,8 @@ def dual_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -
     return combined
 
 
-def combine_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -> Iterable[tuple[Subtitle, Subtitle]]:
+def combine_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -> Iterable[
+    tuple[Subtitle, Subtitle]]:
     current = [None, None]
     combined = []
     for sub, position in merge(((p, 0) for p in primary), ((s, 1) for s in secondary)):
