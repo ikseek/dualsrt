@@ -19,25 +19,22 @@ Subtitle.__eq__ = patched_eq
 def dual_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -> Iterable[Subtitle]:
     combined = []
     for idx, (prim, sec) in enumerate(combine_subtitles(primary, secondary)):
-        prim_content = ".\n."
+        prim_content = ""
         sec_content = ".\n."
         proprietary = ""
         if prim:
-            prim_content = prim.content.strip()
-            if not "\n" in prim_content:
-                prim_content = ".\n" + prim_content
+            prim_content = f'<font color="#ffffff">{prim.content.strip()}</font>'
             proprietary = prim.proprietary
             start = prim.start
             end = prim.end
         if sec:
-            sec_content = sec.content.strip()
-            if not "\n" in sec_content:
+            sec_content = f'<font color="#555555">{sec.content.strip()}</font>'
+            if prim_content and not "\n" in sec_content:
                 sec_content = ".\n" + sec_content
             start = sec.start
             end = sec.end
-        content = f'<font color="#ffffff">{prim_content}</font>\n<font color="#888888">{sec_content}</font>'
         combined.append(
-            Subtitle(idx, start, end, content, proprietary)
+            Subtitle(idx, start, end, "\n".join((prim_content, sec_content)), proprietary)
         )
     return combined
 
