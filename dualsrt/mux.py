@@ -92,16 +92,17 @@ def align_subtitles(
                 and cur_sec
                 and next_sec.content == cur_sec.content
             )
-            shift = length // 2 if repeats_prev and repeats_next else length
-            if repeats_prev and prev_prim:
-                prev_prim.end += shift
-            if repeats_prev and prev_sec:
-                prev_sec.end += shift
-            if repeats_next and next_prim:
-                next_prim.start -= shift
-            if repeats_next and next_sec:
-                next_sec.start -= shift
-            cur_prim = cur_sec = None
+            if repeats_prev or repeats_next:
+                shift = length // 2 if repeats_prev and repeats_next else length
+                if repeats_prev and prev_prim:
+                    prev_prim.end += shift
+                if repeats_prev and prev_sec:
+                    prev_sec.end += shift
+                if repeats_next and next_prim:
+                    next_prim.start -= shift
+                if repeats_next and next_sec:
+                    next_sec.start -= shift
+                cur_prim = cur_sec = None
         if prev_prim or prev_sec:
             aligned.append([prev_prim, prev_sec])
         prev_prim, prev_sec = cur_prim, cur_sec
@@ -349,4 +350,18 @@ def test_align_subtitles_fill_gap():
     assert align_subtitles(subs, 2) == [
         [Subtitle(1, 1, 5, "a1"), Subtitle(1, 1, 5, "b1")],
         [Subtitle(1, 5, 9, "a2"), Subtitle(1, 5, 9, "b2")],
+    ]
+
+
+def test_align_subtitles_keeps_non_repeating_short_tilte():
+    subs = [
+        [None, Subtitle(1, 1, 4, "b1")],
+        [Subtitle(2, 4, 5, "a1"), Subtitle(1, 4, 5, "b2")],
+        [None, Subtitle(2, 6, 9, "b3")],
+    ]
+
+    assert align_subtitles(subs, 2) == [
+        [None, Subtitle(1, 1, 4, "b1")],
+        [Subtitle(2, 4, 5, "a1"), Subtitle(1, 4, 5, "b2")],
+        [None, Subtitle(2, 6, 9, "b3")],
     ]
