@@ -37,7 +37,7 @@ def dual_subtitles(
         if sec:
             sec_content = f'<font color="#555555">{sec.content.strip()}</font>'
             if prim_content and not "\n" in sec_content:
-                sec_content = ".\n" + sec_content
+                sec_content = f"{sec_content}\n."
             start = sec.start
             end = sec.end
         combined.append(
