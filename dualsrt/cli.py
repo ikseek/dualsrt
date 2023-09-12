@@ -8,10 +8,10 @@ from itertools import product
 
 def produce_dual_subtitles(video: Path, primary_lang: str, secondary_lang: str):
     subtitle_tracks = find_subtitles(video, (primary_lang, secondary_lang))
-    all_tracks = [s['index'] for lang in subtitle_tracks.values() for s in lang]
+    all_tracks = [s["index"] for lang in subtitle_tracks.values() for s in lang]
     all_subs = extract_subtitle_tracks(video, *all_tracks)
     for idx, combination in enumerate(product(*subtitle_tracks.values())):
-        tracks = {t['tags']["language"]: t['index'] for t in combination}
+        tracks = {t["tags"]["language"]: t["index"] for t in combination}
         subs = all_subs[tracks[primary_lang]], all_subs[tracks[secondary_lang]]
         subs = [srt.parse(sub) for sub in subs]
         dual = dual_subtitles(*subs)
