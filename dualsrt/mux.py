@@ -1,7 +1,9 @@
+from datetime import timedelta
 from typing import Iterable, Optional
 
 from srt import Subtitle
 from heapq import merge
+from itertools import chain
 
 
 def pairwise(iter):
@@ -18,7 +20,8 @@ Subtitle.__eq__ = patched_eq
 
 def dual_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]) -> Iterable[Subtitle]:
     combined = []
-    for idx, (prim, sec) in enumerate(combine_subtitles(primary, secondary)):
+    aligned = align_subtitles(combine_subtitles(primary, secondary), timedelta(milliseconds=500))
+    for idx, (prim, sec) in enumerate(aligned):
         prim_content = ""
         sec_content = ".\n."
         proprietary = ""
@@ -53,6 +56,41 @@ def combine_subtitles(primary: Iterable[Subtitle], secondary: Iterable[Subtitle]
     if any(current):
         combined.append(current)
     return combined
+
+
+def align_subtitles(subs: Iterable[list[Subtitle, Subtitle]], min_len) -> Iterable[list[Subtitle, Subtitle]]:
+    aligned = []
+    subs = iter(subs)
+    prev_prim = prev_sec = None
+    cur_prim, cur_sec = next(subs)
+
+    for next_prim, next_sec in chain(subs, [[None, None]]):
+        length = (cur_prim or cur_sec).end - (cur_prim or cur_sec).start
+        if length <= min_len:
+            repeats_prev = (prev_prim and cur_prim and prev_prim.content == cur_prim.content or
+                            prev_sec and cur_sec and prev_sec.content == cur_sec.content)
+            repeats_next = (next_prim and cur_prim and next_prim.content == cur_prim.content or
+                            next_sec and cur_sec and next_sec.content == cur_sec.content)
+            shift = length // 2 if repeats_prev and repeats_next else length
+            if repeats_prev and prev_prim:
+                prev_prim.end += shift
+            if repeats_prev and prev_sec:
+                prev_sec.end += shift
+            if repeats_next and next_prim:
+                next_prim.start -= shift
+            if repeats_next and next_sec:
+                next_sec.start -= shift
+            cur_prim = cur_sec = None
+        if prev_prim or prev_sec:
+            aligned.append([prev_prim, prev_sec])
+        prev_prim, prev_sec = cur_prim, cur_sec
+        cur_prim, cur_sec = next_prim, next_sec
+
+    if prev_prim or prev_sec:
+        aligned.append([prev_prim, prev_sec])
+    if cur_prim or cur_sec:
+        aligned.append([prev_prim, prev_sec])
+    return aligned
 
 
 def overlaps(sub1: Subtitle, sub2: Subtitle) -> list[list[Optional[Subtitle], Optional[Subtitle]]]:
@@ -239,4 +277,49 @@ def test_combine_subtitles_chain6():
         [Subtitle(None, 3, 4, "a3"), Subtitle(None, 3, 4, "b1")],
         [None, Subtitle(None, 4, 5, "b1")],
         [Subtitle(None, 5, 6, "a5"), Subtitle(None, 5, 6, "b1")],
+    ]
+
+
+def test_align_subtitles_aligned():
+    subs = [
+        [Subtitle(1, 2, 4, "a1"), Subtitle(1, 2, 4, "b1")]
+    ]
+
+    assert align_subtitles(subs, 1) == [
+        [Subtitle(1, 2, 4, "a1"), Subtitle(1, 2, 4, "b1")]
+    ]
+
+
+def test_align_subtitles_first_early():
+    subs = [
+        [Subtitle(1, 1, 2, "a1"), None],
+        [Subtitle(1, 2, 4, "a1"), Subtitle(1, 2, 4, "b1")]
+    ]
+
+    assert align_subtitles(subs, 1) == [
+        [Subtitle(1, 1, 4, "a1"), Subtitle(1, 1, 4, "b1")]
+    ]
+
+
+def test_align_subtitles_first_late():
+    subs = [
+        [Subtitle(1, 1, 3, "a1"), Subtitle(1, 1, 3, "b1")],
+        [Subtitle(1, 3, 4, "a1"), None],
+    ]
+
+    assert align_subtitles(subs, 1) == [
+        [Subtitle(1, 1, 4, "a1"), Subtitle(1, 1, 4, "b1")]
+    ]
+
+
+def test_align_subtitles_fill_gap():
+    subs = [
+        [Subtitle(1, 1, 4, "a1"), Subtitle(1, 1, 4, "b1")],
+        [Subtitle(1, 4, 6, "a1"), Subtitle(1, 4, 6, "b2")],
+        [Subtitle(1, 6, 9, "a2"), Subtitle(1, 6, 9, "b2")],
+    ]
+
+    assert align_subtitles(subs, 2) == [
+        [Subtitle(1, 1, 5, 'a1'), Subtitle(1, 1, 5, 'b1')],
+        [Subtitle(1, 5, 9, 'a2'), Subtitle(1, 5, 9, 'b2')]
     ]
