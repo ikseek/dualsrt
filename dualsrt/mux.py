@@ -23,7 +23,7 @@ def dual_subtitles(
 ) -> Iterable[Subtitle]:
     combined = []
     aligned = align_subtitles(
-        combine_subtitles(primary, secondary), timedelta(milliseconds=500)
+        combine_subtitles(primary, secondary), timedelta(milliseconds=900)
     )
     for idx, (prim, sec) in enumerate(aligned):
         prim_content = ""
