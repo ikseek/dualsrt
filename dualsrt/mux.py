@@ -95,7 +95,8 @@ def align_subtitles(
                         next_prim.start -= shift
                     if next_sec:
                         next_sec.start -= shift
-                cur_prim = cur_sec = None
+                cur_prim, cur_sec = next_prim, next_sec
+                continue
         if prev_prim or prev_sec:
             aligned.append([prev_prim, prev_sec])
         prev_prim, prev_sec, cur_prim, cur_sec = cur_prim, cur_sec, next_prim, next_sec
@@ -401,6 +402,20 @@ def test_align_subtitles_keeps_unique_short_title():
         [Subtitle(1, 1, 4, "a1"), None],
         [Subtitle(1, 4, 5, "a1"), Subtitle(1, 4, 5, "b1")],
         [Subtitle(1, 5, 6, "a2"), None],
+    ]
+
+
+def test_align_subtitles_removes_series_of_shorts():
+    subs = [
+        [Subtitle(1, 1, 5, "a1"), Subtitle(5, 1, 5, "b1")],
+        [None, Subtitle(5, 5, 7, "b1")],
+        [Subtitle(2, 7, 9, "a2"), Subtitle(5, 7, 9, "b1")],
+        [Subtitle(2, 9, 11, "a2"), None],
+    ]
+
+    assert align_subtitles(subs, 3) == [
+        [Subtitle(1, 1, 7, "a1"), Subtitle(5, 1, 7, "b1")],
+        [Subtitle(2, 8, 11, "a2"), None],
     ]
 
 
