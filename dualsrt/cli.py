@@ -1,10 +1,18 @@
 from pathlib import Path
-import sys
 import srt
 from .mux import dual_subtitles
 from .extract import find_subtitles, extract_subtitle_tracks
 from itertools import product
 from re import sub
+from argparse import ArgumentParser, ArgumentTypeError
+
+
+def existing_file_path(path_str):
+    path = Path(path_str)
+    if not path.is_file():
+        raise ArgumentTypeError(f"file {path_str} does not exist")
+    else:
+        return path
 
 
 def produce_dual_subtitles(video: Path, primary_lang: str, secondary_lang: str):
@@ -20,17 +28,27 @@ def produce_dual_subtitles(video: Path, primary_lang: str, secondary_lang: str):
         sfx = "_".join(sub(r"[^0-9a-z]+", "_", t.lower()) for t in (t1, t2))
         dual_file = video.parent / f"{video.stem}.{primary_lang}.{sfx}.srt"
         dual_file.write_text(srt.compose(dual))
-    return 1
 
 
 def main():
-    video = Path(sys.argv[1])
-    produce_dual_subtitles(video, "eng", "rus")
+    parser = ArgumentParser(description="Subtitle extraction and combining tool")
+    parser.add_argument(
+        "primary_language",
+        help="primary subtitle stream language (the one you learn)",
+    )
+    parser.add_argument(
+        "secondary_language",
+        help="secondary subtitle stream language (the one you understand)",
+    )
+    parser.add_argument(
+        "video_file",
+        nargs="+",
+        type=existing_file_path,
+        help="video file with both subtitle streams",
+    )
+    args = parser.parse_args()
+    for video_file in args.video_file:
+        produce_dual_subtitles(
+            video_file, args.primary_language, args.secondary_language
+        )
     return 0
-
-
-TEST_DATA = Path(__file__).parent.parent / "testdata"
-
-
-def test_produce_dual_subtitles():
-    produce_dual_subtitles(TEST_DATA / "f1.mkv", "eng", "rus")
