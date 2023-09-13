@@ -18,11 +18,7 @@ def existing_file_path(path_str):
 def font_attributes(text):
     pairs = [entry.split(":") for entry in text.split(",") if entry]
     attributes = {attr: value for attr, value in pairs}
-    unknown_attributes = attributes.keys() - {"size", "color"}
-    if unknown_attributes:
-        raise ArgumentTypeError(f"unknown attribute(s) {unknown_attributes}")
-    else:
-        return attributes
+    return attributes
 
 
 def produce_dual_subtitles(
