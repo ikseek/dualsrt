@@ -29,25 +29,17 @@ def dual_subtitles(
     for idx, (prim, sec) in enumerate(aligned):
         prim_content = ""
         sec_content = ".\n."
-        proprietary = ""
         if prim:
             prim_content = strip_font(prim.content.strip())
-            prim_content = f'<font color="#ffffff">{prim_content}</font>'
-            proprietary = prim.proprietary
-            start = prim.start
-            end = prim.end
+            prim_content = f'<font color="#ffffff" size="18">{prim_content}</font>'
         if sec:
-            sec_content = strip_font(sec_content.strip())
-            sec_content = f'<font color="#555555">{sec_content}</font>'
-            if prim_content and not "\n" in sec_content:
-                sec_content = f"{sec_content}\n."
-            start = sec.start
-            end = sec.end
-        combined.append(
-            Subtitle(
-                idx, start, end, "\n".join((prim_content, sec_content)), proprietary
-            )
-        )
+            sec_content = strip_font(sec.content.strip())
+            if "\n" not in sec_content and prim_content:
+                sec_content += "\n."
+        sec_content = f'<font color="#555555" size="10">{sec_content}</font>'
+        start = (prim or sec).start
+        end = (prim or sec).end
+        combined.append(Subtitle(idx, start, end, f"{prim_content}\n{sec_content}"))
     return combined
 
 
