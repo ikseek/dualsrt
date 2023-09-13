@@ -76,51 +76,42 @@ def align_subtitles(
     for next_prim, next_sec in chain(subs, [[None, None]]):
         length = (cur_prim or cur_sec).end - (cur_prim or cur_sec).start
         if length <= min_len:
-            prim_uniq = cur_prim and (
-                (not prev_prim or prev_prim.content != cur_prim.content)
-                and (not next_prim or next_prim.content != cur_prim.content)
-            )
-            sec_uniq = cur_sec and (
-                (not prev_sec or prev_sec.content != cur_sec.content)
-                and (not next_sec or next_sec.content != cur_sec.content)
-            )
-            if not (prim_uniq or sec_uniq):
-                repeats_prev = (
-                    prev_prim
-                    and cur_prim
-                    and prev_prim.content == cur_prim.content
-                    or prev_sec
-                    and cur_sec
-                    and prev_sec.content == cur_sec.content
-                )
-                repeats_next = (
-                    next_prim
-                    and cur_prim
-                    and next_prim.content == cur_prim.content
-                    or next_sec
-                    and cur_sec
-                    and next_sec.content == cur_sec.content
-                )
-                shift = length // 2 if repeats_prev and repeats_next else length
-                if repeats_prev and prev_prim:
-                    prev_prim.end += shift
-                if repeats_prev and prev_sec:
-                    prev_sec.end += shift
-                if repeats_next and next_prim:
-                    next_prim.start -= shift
-                if repeats_next and next_sec:
-                    next_sec.start -= shift
+            prim_uniq = uniq_content(cur_prim, prev_prim, next_prim)
+            sec_uniq = uniq_content(cur_sec, prev_sec, next_sec)
+            if not prim_uniq and not sec_uniq:
+                adjust_prev = repeats(cur_prim, prev_prim) or repeats(cur_sec, prev_sec)
+                adjust_next = repeats(cur_prim, next_prim) or repeats(cur_sec, next_sec)
+                shift = length // 2 if adjust_prev and adjust_next else length
+                if adjust_prev:
+                    if prev_prim:
+                        prev_prim.end += shift
+                    if prev_sec:
+                        prev_sec.end += shift
+                if adjust_next:
+                    if next_prim:
+                        next_prim.start -= shift
+                    if next_sec:
+                        next_sec.start -= shift
                 cur_prim = cur_sec = None
         if prev_prim or prev_sec:
             aligned.append([prev_prim, prev_sec])
-        prev_prim, prev_sec = cur_prim, cur_sec
-        cur_prim, cur_sec = next_prim, next_sec
+        prev_prim, prev_sec, cur_prim, cur_sec = cur_prim, cur_sec, next_prim, next_sec
 
     if prev_prim or prev_sec:
         aligned.append([prev_prim, prev_sec])
     if cur_prim or cur_sec:
         aligned.append([prev_prim, prev_sec])
     return aligned
+
+
+def uniq_content(sub: Optional[Subtitle], *others: Optional[Subtitle]) -> bool:
+    if not sub:
+        return False
+    return all(sub.content != o.content for o in others if o)
+
+
+def repeats(sub: Optional[Subtitle], other: Optional[Subtitle]) -> bool:
+    return bool(sub and other and sub.content == other.content)
 
 
 def overlaps(
