@@ -76,23 +76,31 @@ def align_subtitles(
     for next_prim, next_sec in chain(subs, [[None, None]]):
         length = (cur_prim or cur_sec).end - (cur_prim or cur_sec).start
         if length <= min_len:
-            repeats_prev = (
-                prev_prim
-                and cur_prim
-                and prev_prim.content == cur_prim.content
-                or prev_sec
-                and cur_sec
-                and prev_sec.content == cur_sec.content
+            prim_uniq = cur_prim and (
+                (not prev_prim or prev_prim.content != cur_prim.content)
+                and (not next_prim or next_prim.content != cur_prim.content)
             )
-            repeats_next = (
-                next_prim
-                and cur_prim
-                and next_prim.content == cur_prim.content
-                or next_sec
-                and cur_sec
-                and next_sec.content == cur_sec.content
+            sec_uniq = cur_sec and (
+                (not prev_sec or prev_sec.content != cur_sec.content)
+                and (not next_sec or next_sec.content != cur_sec.content)
             )
-            if repeats_prev or repeats_next:
+            if not (prim_uniq or sec_uniq):
+                repeats_prev = (
+                    prev_prim
+                    and cur_prim
+                    and prev_prim.content == cur_prim.content
+                    or prev_sec
+                    and cur_sec
+                    and prev_sec.content == cur_sec.content
+                )
+                repeats_next = (
+                    next_prim
+                    and cur_prim
+                    and next_prim.content == cur_prim.content
+                    or next_sec
+                    and cur_sec
+                    and next_sec.content == cur_sec.content
+                )
                 shift = length // 2 if repeats_prev and repeats_next else length
                 if repeats_prev and prev_prim:
                     prev_prim.end += shift
@@ -364,4 +372,31 @@ def test_align_subtitles_keeps_non_repeating_short_tilte():
         [None, Subtitle(1, 1, 4, "b1")],
         [Subtitle(2, 4, 5, "a1"), Subtitle(1, 4, 5, "b2")],
         [None, Subtitle(2, 6, 9, "b3")],
+    ]
+
+
+def test_align_subtitles_extends_unique_short_title():
+    subs = [
+        [Subtitle(1, 1, 4, "a1"), None],
+        [Subtitle(1, 4, 5, "a1"), Subtitle(1, 4, 5, "b1")],
+        [Subtitle(1, 5, 6, "a1"), None],
+    ]
+
+    assert align_subtitles(subs, 1) == [
+        [Subtitle(1, 1, 4, "a1"), None],
+        [Subtitle(1, 4, 6, "a1"), Subtitle(1, 4, 6, "b1")],
+    ]
+
+
+def test_align_subtitles_keeps_unique_short_title():
+    subs = [
+        [Subtitle(1, 1, 4, "a1"), None],
+        [Subtitle(1, 4, 5, "a1"), Subtitle(1, 4, 5, "b1")],
+        [Subtitle(1, 5, 6, "a2"), None],
+    ]
+
+    assert align_subtitles(subs, 1) == [
+        [Subtitle(1, 1, 4, "a1"), None],
+        [Subtitle(1, 4, 5, "a1"), Subtitle(1, 4, 5, "b1")],
+        [Subtitle(1, 5, 6, "a2"), None],
     ]
