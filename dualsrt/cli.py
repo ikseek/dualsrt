@@ -4,7 +4,7 @@ from .mux import dual_subtitles
 from .extract import find_subtitles, extract_subtitle_tracks
 from itertools import product
 from re import sub
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentParser, ArgumentTypeError, ArgumentDefaultsHelpFormatter
 
 
 def existing_file_path(path_str):
@@ -15,14 +15,32 @@ def existing_file_path(path_str):
         return path
 
 
-def produce_dual_subtitles(video: Path, primary_lang: str, secondary_lang: str):
+def font_attributes(text):
+    pairs = [entry.split(":") for entry in text.split(",") if entry]
+    attributes = {attr: value for attr, value in pairs}
+    unknown_attributes = attributes.keys() - {"size", "color"}
+    if unknown_attributes:
+        raise ArgumentTypeError(f"unknown attribute(s) {unknown_attributes}")
+    else:
+        return attributes
+
+
+def produce_dual_subtitles(
+    video: Path,
+    primary_lang: str,
+    secondary_lang: str,
+    primary_font: dict,
+    secondary_font: dict,
+):
     subtitle_tracks = find_subtitles(video, (primary_lang, secondary_lang))
     all_tracks = [s["index"] for lang in subtitle_tracks.values() for s in lang]
     all_subs = extract_subtitle_tracks(video, *all_tracks)
     combos = product(subtitle_tracks[primary_lang], subtitle_tracks[secondary_lang])
     for primary, secondary in combos:
         subs = all_subs[primary["index"]], all_subs[secondary["index"]]
-        dual = dual_subtitles(*(srt.parse(s) for s in subs))
+        dual = dual_subtitles(
+            *(srt.parse(s) for s in subs), primary_font, secondary_font
+        )
         t1 = primary["tags"].get("title") or primary["tags"]["language"]
         t2 = secondary["tags"].get("title") or secondary["tags"]["language"]
         sfx = "_".join(sub(r"[^0-9a-z]+", "_", t.lower()) for t in (t1, t2))
@@ -31,7 +49,10 @@ def produce_dual_subtitles(video: Path, primary_lang: str, secondary_lang: str):
 
 
 def main():
-    parser = ArgumentParser(description="Subtitle extraction and combining tool")
+    parser = ArgumentParser(
+        description="Subtitle extraction and combining tool",
+        formatter_class=ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "primary_language",
         help="primary subtitle stream language (the one you learn)",
@@ -46,9 +67,25 @@ def main():
         type=existing_file_path,
         help="video file with both subtitle streams",
     )
+    parser.add_argument(
+        "--primary-font",
+        type=font_attributes,
+        default="size:18",
+        help="font attirubtes of primary titles",
+    )
+    parser.add_argument(
+        "--secondary-font",
+        type=font_attributes,
+        default="size:15,color:gray",
+        help="font attributes of secondary titles",
+    )
     args = parser.parse_args()
     for video_file in args.video_file:
         produce_dual_subtitles(
-            video_file, args.primary_language, args.secondary_language
+            video_file,
+            args.primary_language,
+            args.secondary_language,
+            args.primary_font,
+            args.secondary_font,
         )
     return 0

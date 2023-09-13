@@ -22,27 +22,38 @@ Subtitle.__eq__ = patched_eq
 
 
 def dual_subtitles(
-    primary: Iterable[Subtitle], secondary: Iterable[Subtitle]
+    primary: Iterable[Subtitle],
+    secondary: Iterable[Subtitle],
+    primary_font: dict,
+    secondary_font: dict,
 ) -> Iterable[Subtitle]:
     combined = []
     aligned = align_subtitles(
         combine_subtitles(primary, secondary), timedelta(milliseconds=900)
     )
+    primary_font_attrs = font_attrs(primary_font)
+    secondary_font_attrs = font_attrs(secondary_font)
     for idx, (prim, sec) in enumerate(aligned):
         prim_content = ""
         sec_content = ".\n."
         if prim:
             prim_content = strip_font(prim.content.strip())
-            prim_content = f'<font color="#ffffff" size="18">{prim_content}</font>'
+            if primary_font_attrs:
+                prim_content = f"<font {primary_font_attrs}>{prim_content}</font>"
         if sec:
             sec_content = strip_font(sec.content.strip())
             if "\n" not in sec_content and prim_content:
                 sec_content += "\n."
-        sec_content = f'<font color="#555555" size="10">{sec_content}</font>'
+        if secondary_font_attrs:
+            sec_content = f"<font {secondary_font_attrs}>{sec_content}</font>"
         start = (prim or sec).start
         end = (prim or sec).end
         combined.append(Subtitle(idx, start, end, f"{prim_content}\n{sec_content}"))
     return combined
+
+
+def font_attrs(font: dict):
+    return " ".join('{}="{}"'.format(attr, val) for attr, val in sorted(font.items()))
 
 
 def combine_subtitles(
