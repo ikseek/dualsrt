@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from typing import Iterable, Optional
 
@@ -30,12 +31,14 @@ def dual_subtitles(
         sec_content = ".\n."
         proprietary = ""
         if prim:
-            prim_content = f'<font color="#ffffff">{prim.content.strip()}</font>'
+            prim_content = strip_font(prim.content.strip())
+            prim_content = f'<font color="#ffffff">{prim_content}</font>'
             proprietary = prim.proprietary
             start = prim.start
             end = prim.end
         if sec:
-            sec_content = f'<font color="#555555">{sec.content.strip()}</font>'
+            sec_content = strip_font(sec_content.strip())
+            sec_content = f'<font color="#555555">{sec_content}</font>'
             if prim_content and not "\n" in sec_content:
                 sec_content = f"{sec_content}\n."
             start = sec.start
@@ -102,6 +105,16 @@ def align_subtitles(
     if cur_prim or cur_sec:
         aligned.append([prev_prim, prev_sec])
     return aligned
+
+
+FONT_TAG = re.compile(r"^<font\s+[^>]+>(.*)</font>$", re.DOTALL)
+
+
+def strip_font(text: str) -> str:
+    if match := FONT_TAG.match(text):
+        return match.group(1)
+    else:
+        return text
 
 
 def redundant(sub: Optional[Subtitle], *adjacent: Optional[Subtitle]) -> bool:
@@ -389,3 +402,9 @@ def test_align_subtitles_keeps_unique_short_title():
         [Subtitle(1, 4, 5, "a1"), Subtitle(1, 4, 5, "b1")],
         [Subtitle(1, 5, 6, "a2"), None],
     ]
+
+
+def test_strip_font():
+    assert strip_font('<font face="Serif" size="18">text</font>') == "text"
+    assert strip_font('<font face="Serif" size="18">l1\nl2</font>') == "l1\nl2"
+    assert strip_font('<font size="1"><b>bold</b></font>') == "<b>bold</b>"
