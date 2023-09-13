@@ -42,7 +42,7 @@ def extract_subtitle_tracks(file: Path, *tracks: int) -> dict[int, str]:
         tmp_dir = Path(tmp_dir)
         subs = [(track, tmp_dir / f"{track}.srt") for track in tracks]
 
-        stream = ffmpeg.input(file)
+        stream = ffmpeg.input(file, loglevel="error")
         outputs = [stream.output(str(sub), map=f"0:{track}") for track, sub in subs]
         ffmpeg.merge_outputs(*outputs).run()
 
