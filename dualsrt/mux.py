@@ -76,9 +76,9 @@ def align_subtitles(
     for next_prim, next_sec in chain(subs, [[None, None]]):
         length = (cur_prim or cur_sec).end - (cur_prim or cur_sec).start
         if length <= min_len:
-            prim_uniq = uniq_content(cur_prim, prev_prim, next_prim)
-            sec_uniq = uniq_content(cur_sec, prev_sec, next_sec)
-            if not prim_uniq and not sec_uniq:
+            can_drop_prim = redundant(cur_prim, prev_prim, next_prim)
+            can_drop_sec = redundant(cur_sec, prev_sec, next_sec)
+            if can_drop_prim and can_drop_sec:
                 adjust_prev = repeats(cur_prim, prev_prim) or repeats(cur_sec, prev_sec)
                 adjust_next = repeats(cur_prim, next_prim) or repeats(cur_sec, next_sec)
                 shift = length // 2 if adjust_prev and adjust_next else length
@@ -104,10 +104,8 @@ def align_subtitles(
     return aligned
 
 
-def uniq_content(sub: Optional[Subtitle], *others: Optional[Subtitle]) -> bool:
-    if not sub:
-        return False
-    return all(sub.content != o.content for o in others if o)
+def redundant(sub: Optional[Subtitle], *adjacent: Optional[Subtitle]) -> bool:
+    return not sub or any(sub.content == o.content for o in adjacent if o)
 
 
 def repeats(sub: Optional[Subtitle], other: Optional[Subtitle]) -> bool:
