@@ -7,8 +7,8 @@ from pathlib import Path
 def find_subtitles(
     file: Path,
     languages,
-    skip_forced=True,
     skip_commentary=True,
+    drop_redundant_forced=True,
     drop_redundant_sdh=True,
 ):
     subtitles = {language: [] for language in languages}
@@ -17,16 +17,22 @@ def find_subtitles(
         stream_language = stream["tags"]["language"]
         if stream_language in subtitles:
             title = stream["tags"].get("title", "").lower()
-            if skip_forced and "forc" in title:
-                continue
             if skip_commentary and "comm" in title:
                 continue
             subtitles[stream_language].append(stream)
-    if drop_redundant_sdh:
-        subtitles = {
-            lang: [s for s in subs if "sdh" not in s["tags"].get("title", "").lower()]
-            for lang, subs in subtitles.items()
-        }
+    for streams in subtitles.values():
+        if drop_redundant_forced:
+            cleaned = [
+                s for s in streams if "forc" not in s["tags"].get("title", "").lower()
+            ]
+            if len(cleaned) > 0:
+                streams[:] = cleaned
+        if drop_redundant_sdh:
+            cleaned = [
+                s for s in streams if "sdh" not in s["tags"].get("title", "").lower()
+            ]
+            if len(cleaned) > 0:
+                streams[:] = cleaned
 
     return subtitles
 
