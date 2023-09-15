@@ -44,6 +44,7 @@ def dual_subtitles(
         sec_content = ".\n."
         if sec:
             sec_content = strip_font(sec.content.strip())
+            sec_content, _ = extract_position(sec_content)
             if "\n" not in sec_content:
                 sec_content += "\n."
         if secondary_font_attrs:

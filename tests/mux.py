@@ -300,3 +300,10 @@ def test_dual_subtitles_with_position():
     stream_b = [Subtitle(1, 4, 6, "b")]
     res = dual_subtitles(stream_a, stream_b, {"color": "gray"}, {}, 2)
     assert res == [Subtitle(1, 2, 6, '{\\an8}<font color="gray">a</font>\nb\n.')]
+
+
+def test_dual_subtitles_with_secondary_position():
+    stream_a = [Subtitle(1, 2, 6, r"{\an8}a")]
+    stream_b = [Subtitle(1, 4, 6, r"{\an8}b")]
+    res = dual_subtitles(stream_a, stream_b, {"color": "gray"}, {}, 2)
+    assert res == [Subtitle(1, 2, 6, '{\\an8}<font color="gray">a</font>\nb\n.')]
