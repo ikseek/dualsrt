@@ -38,9 +38,12 @@ def produce_dual_subtitles(
         dual = dual_subtitles(
             *(srt.parse(s) for s in subs), primary_font, secondary_font
         )
-        t1 = primary["tags"].get("title") or primary["tags"]["language"]
-        t2 = secondary["tags"].get("title") or secondary["tags"]["language"]
-        sfx = "_".join(sub(r"[^0-9a-z]+", "_", t.lower()) for t in (t1, t2))
+        parts = (
+            "dual",
+            primary["tags"].get("title") or primary["tags"]["language"],
+            secondary["tags"].get("title") or secondary["tags"]["language"],
+        )
+        sfx = "_".join(sub(r"[^0-9a-z]+", "_", t.lower()) for t in parts)
         dual_file = (
             video.parent / f"{video.stem}.{output_language or primary_lang}.{sfx}.srt"
         )
