@@ -6,7 +6,7 @@ from typing import Iterable, Optional
 
 from srt import Subtitle
 
-FONT_TAG = re.compile(r"^<font\s+[^>]+>(.*)</font>$", re.DOTALL)
+FONT_TAG = re.compile(r"<font\s+[^>]+>|</font>")
 
 
 def pairwise(iter):
@@ -114,10 +114,7 @@ def align_subtitles(
 
 
 def strip_font(text: str) -> str:
-    if match := FONT_TAG.match(text):
-        return match.group(1)
-    else:
-        return text
+    return FONT_TAG.sub("", text)
 
 
 def redundant(sub: Optional[Subtitle], *adjacent: Optional[Subtitle]) -> bool:

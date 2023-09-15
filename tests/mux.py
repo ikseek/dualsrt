@@ -272,3 +272,4 @@ def test_strip_font():
     assert strip_font('<font face="Serif" size="18">text</font>') == "text"
     assert strip_font('<font face="Serif" size="18">l1\nl2</font>') == "l1\nl2"
     assert strip_font('<font size="1"><b>bold</b></font>') == "<b>bold</b>"
+    assert strip_font('a<font size="1">b</font>c') == "abc"
