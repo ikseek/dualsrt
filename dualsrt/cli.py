@@ -69,14 +69,14 @@ def main():
     parser.add_argument(
         "--primary-font",
         type=font_attributes,
-        default="size:18",
-        help='font attirubtes of primary titles (default: "size:18")',
+        default="",
+        help="comma-separated font attirubtes of primary titles",
     )
     parser.add_argument(
         "--secondary-font",
         type=font_attributes,
-        default="size:15,color:gray",
-        help='font attributes of secondary titles (default: "size:15,color:gray")',
+        default="color:gray",
+        help='comma-separated font attributes of secondary titles (default: "color:gray")',
     )
     parser.add_argument(
         "--output-language",
