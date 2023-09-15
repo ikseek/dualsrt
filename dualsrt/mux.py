@@ -42,7 +42,7 @@ def dual_subtitles(
                 prim_content = f"<font {primary_font_attrs}>{prim_content}</font>"
         if sec:
             sec_content = strip_font(sec.content.strip())
-            if "\n" not in sec_content and prim_content:
+            if "\n" not in sec_content:
                 sec_content += "\n."
         if secondary_font_attrs:
             sec_content = f"<font {secondary_font_attrs}>{sec_content}</font>"
