@@ -7,6 +7,7 @@ from typing import Iterable, Optional
 from srt import Subtitle
 
 FONT_TAG = re.compile(r"<font\s+[^>]+>|</font>")
+POSITION = re.compile(r"\{\\an\d}")
 
 
 def pairwise(iter):
@@ -115,6 +116,12 @@ def align_subtitles(
 
 def strip_font(text: str) -> str:
     return FONT_TAG.sub("", text)
+
+
+def extract_position(text: str) -> tuple[str, str]:
+    if match := POSITION.search(text):
+        return POSITION.sub("", text), match.group(0)
+    return text, ""
 
 
 def redundant(sub: Optional[Subtitle], *adjacent: Optional[Subtitle]) -> bool:

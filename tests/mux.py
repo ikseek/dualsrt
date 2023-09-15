@@ -1,5 +1,11 @@
 from srt import Subtitle
-from dualsrt.mux import overlaps, combine_subtitles, align_subtitles, strip_font
+from dualsrt.mux import (
+    overlaps,
+    combine_subtitles,
+    align_subtitles,
+    strip_font,
+    extract_position,
+)
 
 
 def test_overlaps_one():
@@ -273,3 +279,9 @@ def test_strip_font():
     assert strip_font('<font face="Serif" size="18">l1\nl2</font>') == "l1\nl2"
     assert strip_font('<font size="1"><b>bold</b></font>') == "<b>bold</b>"
     assert strip_font('a<font size="1">b</font>c') == "abc"
+
+
+def test_extract_position():
+    assert extract_position("no position") == ("no position", "")
+    assert extract_position(r"{\an8}top") == ("top", r"{\an8}")
+    assert extract_position(r"<font>{\an8}a</font>") == ("<font>a</font>", r"{\an8}")
