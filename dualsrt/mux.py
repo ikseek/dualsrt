@@ -27,29 +27,31 @@ def dual_subtitles(
     secondary: Iterable[Subtitle],
     primary_font: dict,
     secondary_font: dict,
+    min_len=timedelta(milliseconds=900),
 ) -> Iterable[Subtitle]:
     combined = []
-    aligned = align_subtitles(
-        combine_subtitles(primary, secondary), timedelta(milliseconds=900)
-    )
+    aligned = align_subtitles(combine_subtitles(primary, secondary), min_len)
     primary_font_attrs = font_attrs(primary_font)
     secondary_font_attrs = font_attrs(secondary_font)
-    for idx, (prim, sec) in enumerate(aligned):
-        prim_content = ""
-        sec_content = ".\n."
+    for idx, (prim, sec) in enumerate(aligned, 1):
+        content = []
         if prim:
             prim_content = strip_font(prim.content.strip())
+            prim_content, position = extract_position(prim_content)
             if primary_font_attrs:
                 prim_content = f"<font {primary_font_attrs}>{prim_content}</font>"
+            content.extend((position, prim_content, "\n"))
+        sec_content = ".\n."
         if sec:
             sec_content = strip_font(sec.content.strip())
             if "\n" not in sec_content:
                 sec_content += "\n."
         if secondary_font_attrs:
             sec_content = f"<font {secondary_font_attrs}>{sec_content}</font>"
+        content.append(sec_content)
         start = (prim or sec).start
         end = (prim or sec).end
-        combined.append(Subtitle(idx, start, end, f"{prim_content}\n{sec_content}"))
+        combined.append(Subtitle(idx, start, end, "".join(content)))
     return combined
 
 

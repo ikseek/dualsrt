@@ -5,6 +5,7 @@ from dualsrt.mux import (
     align_subtitles,
     strip_font,
     extract_position,
+    dual_subtitles,
 )
 
 
@@ -285,3 +286,17 @@ def test_extract_position():
     assert extract_position("no position") == ("no position", "")
     assert extract_position(r"{\an8}top") == ("top", r"{\an8}")
     assert extract_position(r"<font>{\an8}a</font>") == ("<font>a</font>", r"{\an8}")
+
+
+def test_dual_subtitles_simple():
+    stream_a = [Subtitle(1, 2, 6, "a")]
+    stream_b = [Subtitle(1, 4, 6, "b")]
+    res = dual_subtitles(stream_a, stream_b, {"color": "gray"}, {}, 2)
+    assert res == [Subtitle(1, 2, 6, '<font color="gray">a</font>\nb\n.')]
+
+
+def test_dual_subtitles_with_position():
+    stream_a = [Subtitle(1, 2, 6, r"{\an8}a")]
+    stream_b = [Subtitle(1, 4, 6, "b")]
+    res = dual_subtitles(stream_a, stream_b, {"color": "gray"}, {}, 2)
+    assert res == [Subtitle(1, 2, 6, '{\\an8}<font color="gray">a</font>\nb\n.')]
