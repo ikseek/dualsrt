@@ -14,6 +14,8 @@ def find_subtitles(
     subtitles = {language: [] for language in languages}
     probe = ffmpeg.probe(file, select_streams="s")
     for stream in probe["streams"]:
+        if stream["codec_name"] == "hdmv_pgs_subtitle":
+            continue
         stream_language = stream["tags"]["language"]
         if stream_language in subtitles:
             title = stream["tags"].get("title", "").lower()
